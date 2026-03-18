@@ -1,62 +1,875 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alam AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; }
-        .sidebar { background-color: #1a1a1c; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; border-right: 1px solid #333; }
-        .main-content { margin-left: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
-        .logo-text { font-size: 5rem; font-weight: 700; background: linear-gradient(to right, #a5b4fc, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 15px rgba(129, 140, 248, 0.4)); }
-        .input-pill { background: #131314; border: 1px solid #3c4043; border-radius: 30px; padding: 15px 25px; width: 700px; display: flex; align-items: center; transition: 0.3s; }
-        .input-pill:focus-within { background: #1e1f20; border-color: #5f6368; }
-        .action-btn { background: #1e1f20; border: 1px solid #3c4043; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: #e8eaed; transition: 0.2s; }
-        .action-btn:hover { background: #3c4043; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alam AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700&family=Google+Sans+Text:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg-primary:   #0d0d0d;
+      --bg-sidebar:   #141414;
+      --bg-surface:   #1c1c1e;
+      --bg-input:     #1e1e20;
+      --border:       #2a2a2e;
+      --text-primary: #e8eaed;
+      --text-secondary:#9aa0a6;
+      --text-muted:   #5f6368;
+      --accent-blue:  #4f8ef7;
+      --accent-purple:#a78bfa;
+      --accent-teal:  #34d399;
+      --glow-blue:    rgba(79,142,247,0.18);
+      --glow-purple:  rgba(167,139,250,0.14);
+      --pill-bg:      #1e1e22;
+      --hover-surface:#252528;
+      --send-btn:     #4f8ef7;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Google Sans Text', 'Google Sans', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100dvh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ─── SIDEBAR ─── */
+    .sidebar {
+      width: 72px;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0;
+      gap: 6px;
+      flex-shrink: 0;
+      transition: width 0.3s cubic-bezier(0.4,0,0.2,1);
+      overflow: hidden;
+      z-index: 10;
+    }
+    .sidebar.expanded { width: 260px; align-items: flex-start; padding: 16px 12px; }
+
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; width: 100%; cursor: pointer;
+      border-radius: 12px; margin-bottom: 8px;
+    }
+    .sidebar-logo svg { flex-shrink: 0; }
+
+    .sidebar-logo-text {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 17px; font-weight: 600;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      white-space: nowrap; opacity: 0; transition: opacity 0.2s;
+    }
+    .sidebar.expanded .sidebar-logo-text { opacity: 1; }
+
+    .new-chat-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 24px; cursor: pointer;
+      background: var(--hover-surface); border: 1px solid var(--border);
+      color: var(--text-primary); font-size: 14px; font-weight: 500;
+      font-family: 'Google Sans', sans-serif;
+      transition: background 0.2s, border-color 0.2s;
+      white-space: nowrap; width: 100%; overflow: hidden;
+    }
+    .new-chat-btn:hover { background: #2c2c30; border-color: #3a3a40; }
+    .new-chat-btn .btn-text { opacity: 0; transition: opacity 0.2s; }
+    .sidebar.expanded .new-chat-btn .btn-text { opacity: 1; }
+
+    .sidebar-divider {
+      width: calc(100% - 24px); height: 1px;
+      background: var(--border); margin: 8px 12px;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section-label {
+      font-size: 11px; color: var(--text-muted); font-weight: 500;
+      padding: 4px 14px; text-transform: uppercase; letter-spacing: 0.8px;
+      opacity: 0; transition: opacity 0.2s; width: 100%;
+    }
+    .sidebar.expanded .sidebar-section-label { opacity: 1; }
+
+    .sidebar-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 9px 12px; border-radius: 10px; cursor: pointer;
+      color: var(--text-secondary); font-size: 13.5px; font-weight: 400;
+      transition: background 0.15s, color 0.15s; width: 100%;
+      white-space: nowrap; overflow: hidden;
+    }
+    .sidebar-item:hover { background: var(--hover-surface); color: var(--text-primary); }
+    .sidebar-item.active { background: rgba(79,142,247,0.12); color: var(--accent-blue); }
+    .sidebar-item svg { flex-shrink: 0; }
+    .sidebar-item .item-text { opacity: 0; transition: opacity 0.2s; }
+    .sidebar.expanded .sidebar-item .item-text { opacity: 1; }
+
+    .sidebar-bottom {
+      margin-top: auto; width: 100%;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .avatar-btn {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-radius: 10px; cursor: pointer;
+      transition: background 0.15s; width: 100%;
+    }
+    .avatar-btn:hover { background: var(--hover-surface); }
+    .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 600; color: white; flex-shrink: 0;
+    }
+    .avatar-info { opacity: 0; transition: opacity 0.2s; }
+    .sidebar.expanded .avatar-info { opacity: 1; }
+    .avatar-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+    .avatar-email { font-size: 11px; color: var(--text-muted); }
+
+    /* ─── MAIN AREA ─── */
+    .main {
+      flex: 1; display: flex; flex-direction: column;
+      overflow: hidden; position: relative;
+    }
+
+    /* ─── TOPBAR ─── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; flex-shrink: 0;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+
+    .menu-btn {
+      width: 38px; height: 38px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); transition: background 0.15s;
+    }
+    .menu-btn:hover { background: var(--hover-surface); }
+
+    .model-selector {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 24px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-primary); cursor: pointer;
+      font-family: 'Google Sans', sans-serif; font-size: 13.5px; font-weight: 500;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .model-selector:hover { background: var(--hover-surface); border-color: #3a3a40; }
+
+    .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .icon-btn {
+      width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); transition: background 0.15s;
+    }
+    .icon-btn:hover { background: var(--hover-surface); }
+
+    /* ─── CHAT AREA ─── */
+    .chat-area {
+      flex: 1; overflow-y: auto; padding: 0 24px 16px;
+      display: flex; flex-direction: column;
+      scroll-behavior: smooth;
+    }
+    .chat-area::-webkit-scrollbar { width: 5px; }
+    .chat-area::-webkit-scrollbar-track { background: transparent; }
+    .chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    /* ─── WELCOME / EMPTY STATE ─── */
+    .welcome {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px; padding: 40px 20px; text-align: center;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logo-wrapper {
+      position: relative; display: inline-flex;
+      align-items: center; justify-content: center;
+      margin-bottom: 4px;
+    }
+    .logo-glow {
+      position: absolute; inset: -20px;
+      background: radial-gradient(ellipse at center,
+        rgba(79,142,247,0.22) 0%,
+        rgba(167,139,250,0.14) 50%,
+        transparent 70%);
+      border-radius: 50%; pointer-events: none;
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse {
+      0%,100% { opacity: 0.8; transform: scale(1); }
+      50%      { opacity: 1;   transform: scale(1.12); }
+    }
+
+    .logo-gem {
+      width: 68px; height: 68px; position: relative; z-index: 1;
+    }
+
+    .welcome h1 {
+      font-family: 'Google Sans', sans-serif;
+      font-size: clamp(28px, 5vw, 42px); font-weight: 600;
+      background: linear-gradient(135deg, #e8eaed 10%, var(--accent-blue) 50%, var(--accent-purple) 90%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      line-height: 1.2; letter-spacing: -0.5px;
+    }
+
+    .welcome-sub {
+      font-size: 16px; color: var(--text-secondary);
+      max-width: 420px; line-height: 1.6;
+    }
+
+    /* ─── SUGGESTION CHIPS ─── */
+    .suggestion-chips {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center; margin-top: 8px;
+      max-width: 680px;
+    }
+    .chip {
+      padding: 10px 18px; border-radius: 24px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: 13.5px; cursor: pointer;
+      transition: all 0.2s; font-family: 'Google Sans', sans-serif;
+      white-space: nowrap;
+    }
+    .chip:hover {
+      background: var(--hover-surface); border-color: rgba(79,142,247,0.4);
+      color: var(--text-primary);
+      box-shadow: 0 0 0 1px rgba(79,142,247,0.2);
+    }
+
+    /* ─── MESSAGES ─── */
+    .message-group {
+      max-width: 760px; width: 100%; margin: 12px auto;
+      animation: fadeUp 0.35s ease both;
+    }
+
+    .msg-user {
+      display: flex; justify-content: flex-end; margin-bottom: 20px;
+    }
+    .msg-user-bubble {
+      background: var(--bg-surface); border: 1px solid var(--border);
+      border-radius: 20px 20px 4px 20px;
+      padding: 12px 18px; font-size: 15px; line-height: 1.6;
+      max-width: 70%; color: var(--text-primary);
+    }
+
+    .msg-ai {
+      display: flex; gap: 14px; align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .msg-ai-avatar {
+      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 2px;
+    }
+    .msg-ai-content {
+      flex: 1; font-size: 15px; line-height: 1.75;
+      color: var(--text-primary);
+    }
+    .msg-ai-content p { margin-bottom: 10px; }
+    .msg-ai-content p:last-child { margin-bottom: 0; }
+
+    .msg-ai-actions {
+      display: flex; gap: 4px; margin-top: 10px; padding-left: 48px;
+    }
+    .msg-action {
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-muted); transition: background 0.15s, color 0.15s;
+    }
+    .msg-action:hover { background: var(--hover-surface); color: var(--text-secondary); }
+
+    /* ─── TYPING INDICATOR ─── */
+    .typing-dots {
+      display: flex; gap: 5px; align-items: center; padding: 4px 0;
+    }
+    .typing-dots span {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent-blue); display: inline-block;
+      animation: bounce 1.2s ease infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.15s; background: var(--accent-purple); }
+    .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); opacity: 0.6; }
+      30%          { transform: translateY(-7px); opacity: 1; }
+    }
+
+    /* ─── INPUT ZONE ─── */
+    .input-zone {
+      flex-shrink: 0; padding: 0 24px 20px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+    }
+
+    .input-wrapper {
+      width: 100%; max-width: 760px;
+      background: var(--pill-bg); border: 1px solid var(--border);
+      border-radius: 28px; padding: 10px 10px 10px 16px;
+      display: flex; flex-direction: column; gap: 10px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-wrapper:focus-within {
+      border-color: rgba(79,142,247,0.5);
+      box-shadow: 0 0 0 3px rgba(79,142,247,0.08),
+                  0 0 20px rgba(79,142,247,0.06);
+    }
+
+    .input-row {
+      display: flex; align-items: flex-end; gap: 8px;
+    }
+    #messageInput {
+      flex: 1; background: transparent; border: none; outline: none;
+      color: var(--text-primary); font-size: 15px; line-height: 1.5;
+      font-family: 'Google Sans Text', sans-serif; resize: none;
+      max-height: 160px; min-height: 24px;
+      scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    #messageInput::placeholder { color: var(--text-muted); }
+
+    .input-actions {
+      display: flex; align-items: center; gap: 4px;
+    }
+    .input-icon-btn {
+      width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text-secondary); transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .input-icon-btn:hover { background: var(--hover-surface); color: var(--text-primary); }
+
+    .input-bottom-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .input-left-actions { display: flex; gap: 4px; }
+
+    .tool-chip {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 20px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: 12.5px; cursor: pointer;
+      font-family: 'Google Sans', sans-serif; font-weight: 500;
+      transition: all 0.15s;
+    }
+    .tool-chip:hover {
+      background: var(--hover-surface); color: var(--text-primary);
+      border-color: #3a3a40;
+    }
+
+    .send-btn {
+      width: 38px; height: 38px; border-radius: 50%;
+      background: var(--text-muted); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      flex-shrink: 0;
+    }
+    .send-btn.active {
+      background: var(--accent-blue);
+      box-shadow: 0 2px 12px rgba(79,142,247,0.4);
+    }
+    .send-btn.active:hover {
+      background: #6b9ff8; transform: scale(1.06);
+    }
+    .send-btn svg { color: white; }
+
+    /* ─── ACTION BUTTONS ─── */
+    .action-buttons {
+      display: flex; flex-wrap: wrap; gap: 8px;
+      justify-content: center; max-width: 760px; width: 100%;
+    }
+    .action-btn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 9px 16px; border-radius: 24px;
+      background: var(--bg-surface); border: 1px solid var(--border);
+      color: var(--text-secondary); font-size: 13px; cursor: pointer;
+      font-family: 'Google Sans', sans-serif; font-weight: 500;
+      transition: all 0.2s;
+    }
+    .action-btn:hover {
+      background: var(--hover-surface); color: var(--text-primary);
+      border-color: #3a3a40;
+    }
+    .action-btn svg { flex-shrink: 0; }
+
+    .footer-note {
+      font-size: 11.5px; color: var(--text-muted); text-align: center;
+    }
+
+    /* ─── ERROR TOAST ─── */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #3a1a1a; border: 1px solid #6b2a2a; color: #f87171;
+      padding: 12px 20px; border-radius: 12px; font-size: 13.5px;
+      display: none; z-index: 999; animation: fadeUp 0.3s ease;
+      backdrop-filter: blur(8px);
+    }
+    .toast.show { display: block; }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .action-buttons { display: none; }
+      .topbar { padding: 12px 16px; }
+      .chat-area { padding: 0 12px 12px; }
+      .input-zone { padding: 0 12px 16px; }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="sidebar p-4 flex flex-direction: column">
-        <button class="w-full bg-[#2d2f31] text-white py-3 rounded-lg text-sm mb-6">+ New Chat</button>
-        <div class="text-xs text-gray-500 font-bold uppercase mb-4">Today</div>
-        <div class="text-xs text-gray-400 mb-2 hover:bg-[#2d2f31] p-2 rounded cursor-pointer">Welcome to Alam AI</div>
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-logo" onclick="toggleSidebar()">
+      <!-- Gem icon -->
+      <svg class="logo-gem" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+        <defs>
+          <linearGradient id="gemGrad" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#4f8ef7"/>
+            <stop offset="100%" stop-color="#a78bfa"/>
+          </linearGradient>
+        </defs>
+        <path d="M20 4 L34 14 L28 34 H12 L6 14 Z" fill="url(#gemGrad)" opacity="0.9"/>
+        <path d="M20 4 L34 14 L20 20 L6 14 Z" fill="white" opacity="0.18"/>
+        <path d="M20 4 L20 20 L6 14 Z" fill="white" opacity="0.08"/>
+      </svg>
+      <span class="sidebar-logo-text">Alam AI</span>
     </div>
 
-    <div class="main-content">
-        <div class="logo-text mb-12">Alam AI</div>
-        
-        <div class="input-pill shadow-2xl">
-            <span class="mr-4 text-gray-400 cursor-pointer text-xl">+</span>
-            <input id="userInput" type="text" placeholder="Ask Alam AI" class="bg-transparent outline-none flex-grow text-white">
-            <button onclick="sendMessage()" class="ml-4 text-indigo-400 hover:text-white">➤</button>
-        </div>
+    <button class="new-chat-btn" onclick="newChat()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 5v14M5 12h14"/>
+      </svg>
+      <span class="btn-text">New chat</span>
+    </button>
 
-        <div class="flex space-x-3 mt-6">
-            <button class="action-btn">🖼️ Create image</button>
-            <button class="action-btn">🎵 Create music</button>
-            <button class="action-btn">✏️ Write anything</button>
-            <button class="action-btn">💡 Help me learn</button>
-        </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Recent</div>
+
+    <div class="sidebar-item active">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span class="item-text">New conversation</span>
     </div>
 
-    <script>
-        async function sendMessage() {
-            const input = document.getElementById('userInput');
-            const message = input.value;
-            if(!message) return;
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <span class="item-text">Previous chat</span>
+    </div>
 
-            // CHANGE THIS URL to your actual Vercel URL later
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: message })
-            });
+    <div class="sidebar-divider"></div>
 
-            const data = await response.json();
-            alert("Alam AI says: " + data.reply);
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <span class="item-text">Explore Alam AI</span>
+    </div>
+
+    <div class="sidebar-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+      </svg>
+      <span class="item-text">My Alam AI</span>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        </svg>
+        <span class="item-text">Settings</span>
+      </div>
+      <div class="sidebar-item">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/>
+        </svg>
+        <span class="item-text">Activity</span>
+      </div>
+      <div class="avatar-btn">
+        <div class="avatar">A</div>
+        <div class="avatar-info">
+          <div class="avatar-name">Alam</div>
+          <div class="avatar-email">alam@email.com</div>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="menu-btn" onclick="toggleSidebar()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </div>
+        <button class="model-selector">
+          <svg width="14" height="14" viewBox="0 0 40 40" fill="none">
+            <path d="M20 4 L34 14 L28 34 H12 L6 14 Z" fill="url(#gemGrad)" opacity="0.9"/>
+          </svg>
+          Alam AI 1.5 Pro
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </div>
+      <div class="topbar-right">
+        <div class="icon-btn" title="Share">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </div>
+        <div class="icon-btn" title="More">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>
+          </svg>
+        </div>
+      </div>
+    </header>
+
+    <!-- Chat area -->
+    <div class="chat-area" id="chatArea">
+      <!-- Welcome state -->
+      <div class="welcome" id="welcomeState">
+        <div class="logo-wrapper">
+          <div class="logo-glow"></div>
+          <svg class="logo-gem" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="gemGrad2" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#4f8ef7"/>
+                <stop offset="60%" stop-color="#818cf8"/>
+                <stop offset="100%" stop-color="#a78bfa"/>
+              </linearGradient>
+              <filter id="gemShadow">
+                <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#4f8ef7" flood-opacity="0.35"/>
+              </filter>
+            </defs>
+            <path d="M40 6 L68 24 L56 68 H24 L12 24 Z" fill="url(#gemGrad2)" filter="url(#gemShadow)"/>
+            <path d="M40 6 L68 24 L40 40 L12 24 Z" fill="white" opacity="0.22"/>
+            <path d="M40 6 L40 40 L12 24 Z" fill="white" opacity="0.1"/>
+            <path d="M40 40 L68 24 L56 68 Z" fill="black" opacity="0.08"/>
+          </svg>
+        </div>
+        <h1>Hello, I'm Alam AI</h1>
+        <p class="welcome-sub">How can I help you today? Ask me anything — I'm powered by Claude and ready to assist.</p>
+        <div class="suggestion-chips">
+          <div class="chip" onclick="sendChip(this)">✨ Brainstorm ideas for me</div>
+          <div class="chip" onclick="sendChip(this)">📝 Help me write something</div>
+          <div class="chip" onclick="sendChip(this)">💡 Explain a concept</div>
+          <div class="chip" onclick="sendChip(this)">🔍 Research a topic</div>
+          <div class="chip" onclick="sendChip(this)">💻 Debug my code</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Input Zone -->
+    <div class="input-zone">
+      <div class="input-wrapper" id="inputWrapper">
+        <div class="input-row">
+          <textarea id="messageInput" rows="1" placeholder="Ask Alam AI anything..." maxlength="8000"></textarea>
+          <div class="input-actions">
+            <div class="input-icon-btn" title="Attach file">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="input-bottom-row">
+          <div class="input-left-actions">
+            <div class="tool-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+              </svg>
+              Tools
+            </div>
+            <div class="tool-chip">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/>
+              </svg>
+              + Add
+            </div>
+          </div>
+          <button class="send-btn" id="sendBtn" onclick="sendMessage()" title="Send">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="action-buttons" id="actionButtons">
+        <button class="action-btn" onclick="sendChip(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          Create image
+        </button>
+        <button class="action-btn" onclick="sendChip(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+          Search the web
+        </button>
+        <button class="action-btn" onclick="sendChip(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+          Help me write
+        </button>
+        <button class="action-btn" onclick="sendChip(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+          </svg>
+          Code for me
+        </button>
+        <button class="action-btn" onclick="sendChip(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Summarize text
+        </button>
+      </div>
+
+      <div class="footer-note">Alam AI can make mistakes. Consider checking important information.</div>
+    </div>
+
+  </main>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ── CONFIG ──
+    const BACKEND_URL = 'https://your-vercel-app.vercel.app/api/chat';
+
+    // ── STATE ──
+    let messages = []; // {role, content}
+    let isLoading = false;
+
+    // ── DOM refs ──
+    const chatArea      = document.getElementById('chatArea');
+    const welcomeState  = document.getElementById('welcomeState');
+    const messageInput  = document.getElementById('messageInput');
+    const sendBtn       = document.getElementById('sendBtn');
+    const actionButtons = document.getElementById('actionButtons');
+    const toast         = document.getElementById('toast');
+    const sidebar       = document.getElementById('sidebar');
+
+    // ── Sidebar toggle ──
+    function toggleSidebar() {
+      sidebar.classList.toggle('expanded');
+    }
+
+    // ── Auto-grow textarea ──
+    messageInput.addEventListener('input', () => {
+      messageInput.style.height = 'auto';
+      messageInput.style.height = Math.min(messageInput.scrollHeight, 160) + 'px';
+      updateSendBtn();
+    });
+
+    messageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+    });
+
+    function updateSendBtn() {
+      const hasText = messageInput.value.trim().length > 0;
+      sendBtn.classList.toggle('active', hasText);
+    }
+
+    // ── Chip click ──
+    function sendChip(el) {
+      const text = el.innerText.replace(/^[^\w]+ ?/, '').trim();
+      messageInput.value = text;
+      updateSendBtn();
+      sendMessage();
+    }
+
+    // ── New chat ──
+    function newChat() {
+      messages = [];
+      chatArea.innerHTML = '';
+      chatArea.appendChild(welcomeState);
+      welcomeState.style.display = 'flex';
+      actionButtons.style.display = 'flex';
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+      updateSendBtn();
+    }
+
+    // ── Show toast ──
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+
+    // ── Send message ──
+    async function sendMessage() {
+      const text = messageInput.value.trim();
+      if (!text || isLoading) return;
+
+      // Hide welcome / action buttons
+      welcomeState.style.display = 'none';
+      actionButtons.style.display = 'none';
+
+      // Add to state
+      messages.push({ role: 'user', content: text });
+
+      // Render user bubble
+      appendUserMessage(text);
+
+      // Clear input
+      messageInput.value = '';
+      messageInput.style.height = 'auto';
+      updateSendBtn();
+
+      // Show typing
+      const typingEl = appendTyping();
+      isLoading = true;
+
+      try {
+        const res = await fetch(BACKEND_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text, history: messages.slice(0, -1) })
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error || `Server error: ${res.status}`);
         }
-    </script>
+
+        const data = await res.json();
+        const reply = data.reply || data.content || 'Sorry, I received an empty response.';
+
+        typingEl.remove();
+        messages.push({ role: 'assistant', content: reply });
+        appendAIMessage(reply);
+
+      } catch (err) {
+        typingEl.remove();
+        showToast('⚠ ' + (err.message || 'Could not reach the backend. Check your Vercel URL.'));
+        messages.pop(); // remove unsent user msg from state
+      } finally {
+        isLoading = false;
+      }
+    }
+
+    // ── Render helpers ──
+    function appendUserMessage(text) {
+      const group = document.createElement('div');
+      group.className = 'message-group';
+      group.innerHTML = `
+        <div class="msg-user">
+          <div class="msg-user-bubble">${escHtml(text)}</div>
+        </div>`;
+      chatArea.appendChild(group);
+      scrollToBottom();
+    }
+
+    function appendTyping() {
+      const group = document.createElement('div');
+      group.className = 'message-group';
+      group.innerHTML = `
+        <div class="msg-ai">
+          <div class="msg-ai-avatar">
+            <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
+              <path d="M20 4 L34 14 L28 34 H12 L6 14 Z" fill="white" opacity="0.9"/>
+            </svg>
+          </div>
+          <div class="msg-ai-content">
+            <div class="typing-dots"><span></span><span></span><span></span></div>
+          </div>
+        </div>`;
+      chatArea.appendChild(group);
+      scrollToBottom();
+      return group;
+    }
+
+    function appendAIMessage(text) {
+      const group = document.createElement('div');
+      group.className = 'message-group';
+
+      // Simple markdown: bold, code, newlines
+      let html = escHtml(text)
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code style="background:var(--bg-surface);padding:2px 6px;border-radius:4px;font-size:13px;">$1</code>')
+        .replace(/\n/g, '<br>');
+
+      group.innerHTML = `
+        <div class="msg-ai">
+          <div class="msg-ai-avatar">
+            <svg width="18" height="18" viewBox="0 0 40 40" fill="none">
+              <path d="M20 4 L34 14 L28 34 H12 L6 14 Z" fill="white" opacity="0.9"/>
+            </svg>
+          </div>
+          <div class="msg-ai-content">${html}</div>
+        </div>
+        <div class="msg-ai-actions">
+          <div class="msg-action" title="Copy" onclick="copyMsg(this, \`${escAttr(text)}\`)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </div>
+          <div class="msg-action" title="Like">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z"/>
+              <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+            </svg>
+          </div>
+          <div class="msg-action" title="Dislike">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3H10z"/>
+              <path d="M17 2h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/>
+            </svg>
+          </div>
+          <div class="msg-action" title="Regenerate">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.12"/>
+            </svg>
+          </div>
+        </div>`;
+      chatArea.appendChild(group);
+      scrollToBottom();
+    }
+
+    function copyMsg(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.style.color = 'var(--accent-teal)';
+        setTimeout(() => btn.style.color = '', 1500);
+      });
+    }
+
+    function escHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function escAttr(s) {
+      return s.replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$');
+    }
+
+    function scrollToBottom() {
+      setTimeout(() => chatArea.scrollTo({ top: chatArea.scrollHeight, behavior: 'smooth' }), 50);
+    }
+  </script>
 </body>
 </html>
