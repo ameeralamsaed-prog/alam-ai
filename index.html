@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alam AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background-color: #000; color: white; font-family: 'Inter', sans-serif; }
+        .sidebar { background-color: #1a1a1c; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; border-right: 1px solid #333; }
+        .main-content { margin-left: 260px; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .logo-text { font-size: 5rem; font-weight: 700; background: linear-gradient(to right, #a5b4fc, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 0 15px rgba(129, 140, 248, 0.4)); }
+        .input-pill { background: #131314; border: 1px solid #3c4043; border-radius: 30px; padding: 15px 25px; width: 700px; display: flex; align-items: center; transition: 0.3s; }
+        .input-pill:focus-within { background: #1e1f20; border-color: #5f6368; }
+        .action-btn { background: #1e1f20; border: 1px solid #3c4043; padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; color: #e8eaed; transition: 0.2s; }
+        .action-btn:hover { background: #3c4043; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar p-4 flex flex-direction: column">
+        <button class="w-full bg-[#2d2f31] text-white py-3 rounded-lg text-sm mb-6">+ New Chat</button>
+        <div class="text-xs text-gray-500 font-bold uppercase mb-4">Today</div>
+        <div class="text-xs text-gray-400 mb-2 hover:bg-[#2d2f31] p-2 rounded cursor-pointer">Welcome to Alam AI</div>
+    </div>
+
+    <div class="main-content">
+        <div class="logo-text mb-12">Alam AI</div>
+        
+        <div class="input-pill shadow-2xl">
+            <span class="mr-4 text-gray-400 cursor-pointer text-xl">+</span>
+            <input id="userInput" type="text" placeholder="Ask Alam AI" class="bg-transparent outline-none flex-grow text-white">
+            <button onclick="sendMessage()" class="ml-4 text-indigo-400 hover:text-white">➤</button>
+        </div>
+
+        <div class="flex space-x-3 mt-6">
+            <button class="action-btn">🖼️ Create image</button>
+            <button class="action-btn">🎵 Create music</button>
+            <button class="action-btn">✏️ Write anything</button>
+            <button class="action-btn">💡 Help me learn</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value;
+            if(!message) return;
+
+            // CHANGE THIS URL to your actual Vercel URL later
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            alert("Alam AI says: " + data.reply);
+        }
+    </script>
+</body>
+</html>
